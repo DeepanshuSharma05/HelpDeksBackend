@@ -73,4 +73,40 @@ public class BidService {
 
         return bidRepository.findByServiceProvider(user);
     } // done for the day
+
+    public Bid updateBidStatus(String currentUsername, Long bidId, String newStatus) {
+        // 1. Find the logged-in user
+        User user = userRepository.findByUserName(currentUsername)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 2. Ensure the user is a CONSUMER
+        if (!Objects.equals(user.getRole(), "CONSUMER")) {
+            throw new RuntimeException("Only consumers can accept or reject bids");
+        }
+
+        // 3. Find the bid
+        Bid bid = bidRepository.findById(bidId)
+                .orElseThrow(() -> new RuntimeException("Bid not found"));
+
+        // 4. Verify that the consumer owns the work post this bid belongs to
+        WorkPost workPost = bid.getWorkPost();
+        if (!Objects.equals(workPost.getUser().getId(), user.getId())) {
+            throw new RuntimeException("You can only manage bids for your own work posts");
+        }
+
+        // 5. Validate and update status (ACCEPTED or REJECTED)
+        String upperStatus = newStatus.toUpperCase();
+        if (!upperStatus.equals("ACCEPTED") && !upperStatus.equals("REJECTED")) {
+            throw new RuntimeException("Invalid status. Use ACCEPTED or REJECTED");
+        }
+
+        bid.setStatus(upperStatus);
+
+        // Optional: If this bid is accepted, you could loop through other bids
+        // for this workPost and set them to REJECTED automatically.
+
+        return bidRepository.save(bid);
+    }
+
+
 }

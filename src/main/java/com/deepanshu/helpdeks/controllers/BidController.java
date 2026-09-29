@@ -44,4 +44,15 @@ public class BidController {
         List<Bid> bids = bidService.getMyBids(principal.getName());
         return ResponseEntity.ok(bids);
     }
+
+    @PatchMapping("/{bidId}/status")
+    public ResponseEntity<Bid> updateBidStatus(
+            Principal principal,
+            @PathVariable Long bidId,
+            @RequestParam String status // e.g., ?status=ACCEPTED or ?status=REJECTED
+    ) {
+        String currentUsername = principal.getName();
+        Bid updatedBid = bidService.updateBidStatus(currentUsername, bidId, status);
+        return ResponseEntity.ok(updatedBid);
+    }
 }
